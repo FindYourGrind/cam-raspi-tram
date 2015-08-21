@@ -1,0 +1,52 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+{% block content %}
+<script type="text/javascript">
+    setTimeout(function(){
+        var x = new XMLHttpRequest();
+        x.open("GET", "lastplate", false);
+        x.send(null);
+        lab = document.getElementById("lab");
+        lab.value = x.responseText;
+        setTimeout(arguments.callee, 500);
+    }, 500)
+</script>
+
+<center><h1>Plate Number Finder</h1>
+<table cellspacing="10" align="center">
+     <tr>
+        <td>
+            <center>
+                <h2>Plate Number<h2>
+            </center>
+        </td>
+        <td>
+            <center>
+                <h2>Threash<h2>
+            </center>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <center>
+                <img src="{{ url_for('video_feed', picname = 'platenumber') }}" width="320">
+            </center>
+        </td>
+        <td>
+            <center>
+                <img src="{{ url_for('video_feed', picname = 'platenumberthreash') }}" width="320">
+            </center>
+        </td>
+    </tr>
+</table></center>
+<script>
+    setTimeout(function){
+        var x = new XMLHttpRequest();
+        x.open("GET")
+        }
+</script>
+<center><div>Last plate number finded:
+            <input id="lab" size="30" value="Here will be a finded plate number">
+        </div>
+</center>
+{% endblock %}

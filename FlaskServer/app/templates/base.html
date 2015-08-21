@@ -1,0 +1,40 @@
+<html>
+  <head>
+    {% if title %}
+        <title>{{title}} - microblog</title>
+    {% else %}
+        <title>microblog</title>
+    {% endif %}
+    <style>
+        .column {
+            -webkit-columns: 100px 2;
+            -moz-columns: 100px 2;
+            columns: 100px 2;
+            -webkit-column-gap: 30px;
+            -moz-column-gap: 30px;
+            column-gap: 30px;
+            -webkit-column-rule: 1px solid #ccc;
+            -mox-column-rule: 1px solid #ccc;
+            column-rule: 1px solid #ccc;
+        }
+    </style>
+  </head>
+  <body>
+    <center><div>Smart Parking: <a href="/index">Home</a>
+                        <a href="/video">Video</a>
+                        <a href="/drivedirection">DriveDirection</a>
+                        <a href="/plate">PlateNumberFinding</a></div></center>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+    <hr>
+  </body>
+</html>

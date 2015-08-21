@@ -1,0 +1,70 @@
+<!-- extend base layout -->
+{% extends "base.html" %}
+{% block content %}
+<center><h1>Drive Direction</h1></center>
+<table cellspacing="50" align="center">
+    <tr>
+        <td>
+            <p>
+            <center><h2>General View with ROI</h2><img src="{{ url_for('video_feed', picname = 'generalviewwithroi') }}" width="320" height="240"></center>
+            </p>
+        </td>
+    <td>
+        <p>
+        <form name="config" action="", method="post">
+            <center><h2>Configuration</h2></center>
+            {{form.hidden_tag()}}
+            Select ROI for driving:
+            <table>
+                <tr>
+                    <td>{{form.roi1ForDrive}} ROI1</td>
+                    <td>{{form.roi2ForDrive}} ROI2</td>
+                    <td>{{form.roi3ForDrive}} ROI3</td>
+                    <td>{{form.roi4ForDrive}} ROI4</td>
+                    <td>{{form.roi5ForDrive}} ROI5</td>
+                    <td>{{form.roi6ForDrive}} ROI6</td>
+                    <td>{{form.roi7ForDrive}} ROI7</td>
+                    <td>{{form.roi8ForDrive}} ROI8</td>
+                </tr>
+                <tr>
+                    <td>{{form.roi9ForDrive}} ROI9</td>
+                    <td>{{form.roi10ForDrive}} ROI10</td>
+                    <td>{{form.roi11ForDrive}} ROI11</td>
+                    <td>{{form.roi12ForDrive}} ROI12</td>
+                    <td>{{form.roi13ForDrive}} ROI13</td>
+                    <td>{{form.roi14ForDrive}} ROI14</td>
+                    <td>{{form.roi15ForDrive}} ROI15</td>
+                    <td>{{form.roi16ForDrive}} ROI16</td>
+                </tr>
+            </table>
+            <br>
+            Select ROI for leaving:
+            <table>
+                <tr>
+                    <td>{{form.roi1ForLeave}} ROI1</td>
+                    <td>{{form.roi2ForLeave}} ROI2</td>
+                    <td>{{form.roi3ForLeave}} ROI3</td>
+                    <td>{{form.roi4ForLeave}} ROI4</td>
+                    <td>{{form.roi5ForLeave}} ROI5</td>
+                    <td>{{form.roi6ForLeave}} ROI6</td>
+                    <td>{{form.roi7ForLeave}} ROI7</td>
+                    <td>{{form.roi8ForLeave}} ROI8</td>
+                </tr>
+                <tr>
+                    <td>{{form.roi9ForLeave}} ROI9</td>
+                    <td>{{form.roi10ForLeave}} ROI10</td>
+                    <td>{{form.roi11ForLeave}} ROI11</td>
+                    <td>{{form.roi12ForLeave}} ROI12</td>
+                    <td>{{form.roi13ForLeave}} ROI13</td>
+                    <td>{{form.roi14ForLeave}} ROI14</td>
+                    <td>{{form.roi15ForLeave}} ROI15</td>
+                    <td>{{form.roi16ForLeave}} ROI16</td>
+                </tr>
+            </table>
+            <p><center><input type="submit" value="Configurate"></center></p>
+        </form>
+    </p>
+    </td>
+</table>
+</div>
+{% endblock %}
