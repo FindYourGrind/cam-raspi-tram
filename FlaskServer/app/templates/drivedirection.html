@@ -1,12 +1,62 @@
 <!-- extend base layout -->
 {% extends "base.html" %}
 {% block content %}
+<script type="text/javascript">
+    setTimeout(function(){
+        var canv  = document.getElementById("example"),
+            ctx   = canv.getContext("2d"),
+            image = new Image();
+        image.onload = function(){
+            var w = 320;
+            var h = 240;
+            ctx.drawImage(image, 0, 0);
+            ctx.beginPath();
+
+            ctx.moveTo(w / 5, 0);
+            ctx.lineTo(w / 5, h);
+            ctx.moveTo(w - w / 5, 0);
+            ctx.lineTo(w - w / 5, h);
+
+            ctx.moveTo(0, h / 5);
+            ctx.lineTo(w, h / 5);
+            ctx.moveTo(0, h - h / 5);
+            ctx.lineTo(w, h - h / 5);
+
+
+            ctx.moveTo(2 * w / 5, 0);
+            ctx.lineTo(2 * w / 5, h / 5);
+            ctx.moveTo(3 * w / 5, 0);
+            ctx.lineTo(3 * w / 5, h / 5);
+
+            ctx.moveTo(0, 2 * h / 5);
+            ctx.lineTo(w / 5, 2 * h / 5);
+            ctx.moveTo(0, 3 * h / 5);
+            ctx.lineTo(w / 5, 3 * h / 5);
+
+            ctx.moveTo(2 * w / 5, h - h / 5);
+            ctx.lineTo(2 * w / 5, h);
+            ctx.moveTo(3 * w / 5, h - h / 5);
+            ctx.lineTo(3 * w / 5, h);
+
+            ctx.moveTo(w - w / 5, 2 * h / 5);
+            ctx.lineTo(w, 2 * h / 5);
+            ctx.moveTo(w - w / 5, 3 * h / 5);
+            ctx.lineTo(w, 3 * h / 5);
+
+            ctx.strokeStyle = "#00FF00";
+            ctx.stroke();
+        }
+        image.src = "{{ url_for('video_feed', picname = 'generalview') }}";
+        setTimeout(arguments.callee, 50);
+    }, 50)
+</script>
 <center><h1>Drive Direction</h1></center>
 <table cellspacing="50" align="center">
     <tr>
         <td>
             <p>
-            <center><h2>General View with ROI</h2><img src="{{ url_for('video_feed', picname = 'generalviewwithroi') }}" width="320" height="240"></center>
+            <!-- <center><h2>General View with ROI</h2><img src="{{ url_for('video_feed', picname = 'generalviewwithroi') }}" width="320" height="240"></center> -->
+            <canvas id="example" width="320" height="240">Update your browser</canvas>
             </p>
         </td>
     <td>

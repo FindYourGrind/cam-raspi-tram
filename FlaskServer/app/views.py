@@ -42,8 +42,8 @@ class Camera(object):
             return Camera.plate
         elif picname == 'platenumberthreash':
             return Camera.threash
-        elif picname == 'generalviewwithroi':
-            return Camera.divade
+        #elif picname == 'generalviewwithroi':
+        #    return Camera.divade
 
     @classmethod
     def _thread(cls):
@@ -51,46 +51,46 @@ class Camera(object):
         HOST = '127.0.0.1'    # The remote host
         PORT = 50007          # The same port as used by the server
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
 
         while True:
             try:
-            #s.connect((HOST, PORT))
                 if cls.count == 0:
                     name = 'generalview'
                 elif cls.count == 1:
                     name = 'platenumber'
                 elif cls.count == 2:
                     name = 'platenumberthreash'
-                elif cls.count == 3:
-                    name = 'generalviewwithroi'
 
                 s.sendall(name)
-                #tmp = s.recv(76800)
 
-                #if not tmp:
-                #    pass
-                #elif tmp == 'no data':
-                #    pass
-                #else:
                 if name == 'generalview':
                     cls.frame = s.recv(76800)
                 elif name == 'platenumber':
                     cls.plate = s.recv(76800)
                 elif name == 'platenumberthreash':
                     cls.threash = s.recv(76800)
-                elif name == 'generalviewwithroi':
-                    cls.divade = s.recv(76800)
 
                 cls.count += 1
-                if cls.count == 4:
+                if cls.count == 3:
                     cls.count = 0
-                #s.close()
+
+                if time.time() - cls.last_access > 10:
+                    print("Timeout")
+                    s.shutdown(2)
+                    s.close()
+                    cls.thread = None
+                    break
             except:
-                print('err')
-            #if time.time() - cls.last_access > 10:
-            #    break
-        cls.thread = None
+                print('Connection error')
+                #s.close()
+                while True:
+                    try:
+                        print("Trying to connect")
+                        s.connect((HOST, PORT))
+                        break
+                    except:
+                        pass
+                print("Connected")
 
 
 @app.route('/')

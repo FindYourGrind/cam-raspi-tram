@@ -15,7 +15,7 @@ import copy
 import os
 from cpmoptimize import cpmoptimize
 
-HOST = '127.0.0.1'                 # Symbolic name meaning all available interfaces
+HOST = '127.0.0.1'        # Symbolic name meaning all available interfaces
 PORT = 50007              # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
@@ -303,8 +303,8 @@ def server(data):
                     img = data.getPlateImg()
                 elif tmp == 'platenumberthreash':
                     img = data.getPlateThreash()
-                elif tmp == 'generalviewwithroi':
-                    img = data.getDivadeImg()
+                #elif tmp == 'generalviewwithroi':
+                #    img = data.getDivadeImg()
                 else:
                     img = data.getFrame()
 
@@ -488,8 +488,8 @@ def DirectionDetector(data):
         cv.putText(generalview, "fps=%u" % finder.calcFps(), (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         data.setFrame(generalview)
 
-        divadeImg = drawDiviadeLines(image.copy())
-        data.setDivadeImg(divadeImg)
+        #divadeImg = drawDiviadeLines(image.copy())
+        #data.setDivadeImg(divadeImg)
 
         if getLastModifieTime(confPath) == lastChangeTime:
             pass
