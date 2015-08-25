@@ -13,7 +13,7 @@ import pytesseract
 import re
 import copy
 import os
-from cpmoptimize import cpmoptimize
+
 
 HOST = '127.0.0.1'        # Symbolic name meaning all available interfaces
 PORT = 50007              # Arbitrary non-privileged port
@@ -237,6 +237,7 @@ def decode(img):
     tmpData = jpg.tobytes()
     return tmpData
 
+
 class ImgData(object):
 
     def __init__(self):
@@ -320,7 +321,6 @@ def server(data):
                 break
 
 
-@cpmoptimize()
 def gDivadeImg(img):
     row, cols, depth = img.shape
     width = cols / 5
@@ -333,40 +333,6 @@ def gDivadeImg(img):
         yield (img[(row - high):row, ((4 - i) * width):(width * ((4 - i) + 1))])
     for i in range(0, 3):
         yield (img[(high * ((2 - i) + 1)):(high * ((2 - i) + 1) + high), 0:width])
-
-
-@cpmoptimize()
-def drawDiviadeLines(img):
-    row, cols, depth = img.shape
-    dx = cols / 5
-    dy = row / 5
-    for i in range(1, 5):
-        if i == 1 or i == 4:
-            img = cv.line(img, (i * dx, 0), (i * dx, row), (255, 0, 0), 3)
-        else:
-            img = cv.line(img, (i * dx, 0), (i * dx, dy), (255, 0, 0), 3)
-            img = cv.line(img, (i * dx, row - dy), (i * dx, row), (255, 0, 0), 3)
-
-    for i in range(1, 5):
-        if i == 1 or i == 4:
-            img = cv.line(img, (0, i * dy), (cols, i * dy), (255, 0, 0), 3)
-        else:
-            img = cv.line(img, (0, i * dy), (dx, i * dy), (255, 0, 0), 3)
-            img = cv.line(img, (cols - dx, i * dy), (cols, i * dy), (255, 0, 0), 3)
-
-    for i in range(1, 6):
-        cv.putText(img, "%u" % i, ((i - 1) * dx, dy - 47), cv.FONT_HERSHEY_TRIPLEX, 1.8, (0, 255, 0), 4)
-
-    for i in range(6, 9):
-        cv.putText(img, "%u" % i, (4 * dx, (i - 4) * dy - 47), cv.FONT_HERSHEY_TRIPLEX, 1.8, (0, 255, 0), 4)
-
-    for i in range(9, 14):
-        cv.putText(img, "%u" % i, (cols - ((i - 8) * dx), 5 * dy - 47), cv.FONT_HERSHEY_TRIPLEX, 1.8, (0, 255, 0), 4)
-
-    for i in range(14, 17):
-        cv.putText(img, "%u" % i, (0, row - ((i - 13) * dy) - 47), cv.FONT_HERSHEY_TRIPLEX, 1.8, (0, 255, 0), 4)
-
-    return img
 
 
 def configurateDetector(path, drive, leave, time):
@@ -390,12 +356,13 @@ def configurateDetector(path, drive, leave, time):
     print("Detector is reconfigurated")
     return time
 
+
 def getLastModifieTime(path):
     return os.path.getmtime(path)
 
+
 #Starting Script
 #Plate Finder
-@cpmoptimize()
 def plateFinder(data, finder, image):
 
     cutNumberImg = finder.detectPlaitNumber(image)
@@ -422,9 +389,10 @@ def plateFinder(data, finder, image):
 
                 if justNumber is not "None":
 
-                    finder.saveImgInJPG('justNumber.jpg', justNumber)
-                    finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
-                    numberForParsing = finder.openImgInPNG('justNumber.png')
+                    #finder.saveImgInJPG('justNumber.jpg', justNumber)
+                    #finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
+                    #numberForParsing = finder.openImgInPNG('justNumber.png')
+                    numberForParsing = cv.imencode(".png", justNumber)
 
                     stringNumber = finder.parseImgByTess(numberForParsing)
 
@@ -460,7 +428,7 @@ def plateFinder(data, finder, image):
                     errlog.close()
                     #time.sleep(1)
 
-@cpmoptimize()
+
 def DirectionDetector(data):
 
     finder = PlaitNumberFinder()

@@ -339,6 +339,7 @@ def ReadConfig(conffile, form):
     else:
         form.roi16ForLeave.data = False
 
+
 @app.route('/drivedirection', methods=['GET', 'POST'])
 def DriveDirection():
     form = forms.ConfigForm()
@@ -373,7 +374,10 @@ def lastplate():
     path = '/var/www/plate_number_logs.txt'
     base, ext = os.path.splitext(path)
     config = open("{}{}".format(base, ext), mode='r')
-    tmp = config.readlines()[-1]
+    try:
+        tmp = config.readlines()[-1]
+    except:
+        tmp = "No plate number finded"
     config.close()
     return tmp
 
