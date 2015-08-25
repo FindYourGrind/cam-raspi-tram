@@ -43,6 +43,7 @@ class PlaitNumberFinder(object):
         self.allDigit = None
         self.fps = 0
         self.fpsCount = 0
+        self.direction = 'none'
         self.curTime = time.time()
 
     def initCamera(self):
@@ -304,8 +305,6 @@ def server(data):
                     img = data.getPlateImg()
                 elif tmp == 'platenumberthreash':
                     img = data.getPlateThreash()
-                #elif tmp == 'generalviewwithroi':
-                #    img = data.getDivadeImg()
                 else:
                     img = data.getFrame()
 
@@ -389,10 +388,10 @@ def plateFinder(data, finder, image):
 
                 if justNumber is not "None":
 
-                    #finder.saveImgInJPG('justNumber.jpg', justNumber)
-                    #finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
-                    #numberForParsing = finder.openImgInPNG('justNumber.png')
-                    numberForParsing = cv.imencode(".png", justNumber)
+                    finder.saveImgInJPG('justNumber.jpg', justNumber)
+                    finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
+                    numberForParsing = finder.openImgInPNG('justNumber.png')
+                    #numberForParsing = cv.imencode('png', justNumber)
 
                     stringNumber = finder.parseImgByTess(numberForParsing)
 
@@ -409,19 +408,19 @@ def plateFinder(data, finder, image):
                     errlog = open("{}{}".format(base, ext), mode='a')
 
                     if not isinstance(n, type(None)):
-                        string = time.asctime() + "   " + n.group()
+                        string = time.asctime() + "   " + n.group() + "   " + finder.direction
                         print(string)
                         log.write(string + '\r\n')
                     elif not isinstance(o, type(None)):
-                        string = time.asctime() + "   " + o.group()
+                        string = time.asctime() + "   " + o.group() + "   " + finder.direction
                         print(string)
                         log.write(string + '\r\n')
                     elif not isinstance(d, type(None)):
-                        string = time.asctime() + "   " + d.group()
+                        string = time.asctime() + "   " + d.group() + "   " + finder.direction
                         print(string)
                         log.write(string + '\r\n')
                     else:
-                        string = time.asctime() + "   " + stringNumber + "   With Errors!!"
+                        string = time.asctime() + "   " + stringNumber + "   " + finder.direction + "   With Errors!!"
                         print(string)
                         errlog.write(string + '\r\n')
                     log.close()
@@ -446,6 +445,7 @@ def DirectionDetector(data):
     roiForLeave = [0 for i in range(0, 16)]
     lastChangeTime = 0
     confPath = '/var/www/config_drive_direction.txt'
+    movFlag = False
 
     lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, lastChangeTime)
 
@@ -464,44 +464,50 @@ def DirectionDetector(data):
         else:
             lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, lastChangeTime)
 
+        movFlag = False
 ################################################################
-        #g = gDivadeImg(image.copy())
-        #for i in range(0, 16):
-            #littleImg = next(g)
-            #gray = cv.cvtColor(littleImg.copy(), cv.COLOR_BGR2GRAY)
-            #gray = cv.GaussianBlur(gray, (21, 21), 0)
+        g = gDivadeImg(image.copy())
+        for i in range(0, 16):
+            littleImg = next(g)
+            gray = cv.cvtColor(littleImg.copy(), cv.COLOR_BGR2GRAY)
+            gray = cv.GaussianBlur(gray, (21, 21), 0)
 
-            #if littleImgPrv[i] is None:
-                #littleImgPrv[i] = gray.copy()
-                #continue
+            if littleImgPrv[i] is None:
+                littleImgPrv[i] = gray.copy()
+                continue
 
-            #frameDelta = cv.absdiff(littleImgPrv[i], gray)
-            #thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
-            #thresh = cv.erode(thresh, None, iterations=2)
+            frameDelta = cv.absdiff(littleImgPrv[i], gray)
+            thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
+            thresh = cv.erode(thresh, None, iterations=2)
 
-            #(img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,
-                #cv.CHAIN_APPROX_SIMPLE)
+            (img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,
+                cv.CHAIN_APPROX_SIMPLE)
 
-            #for c in cnts:
-                ## if the contour is too small, ignore it
-                #if cv.contourArea(c) < 500:
-                    #continue
-                ## compute the bounding box for the contour, draw it on the frame,
-                ## and update the text
-                #if movCount == 1:
-                    #movCount = 0
-                    ##(x, y, w, h) = cv.boundingRect(c)
-                    ##cv.rectangle(littleImg, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                    ##plateFinder(data, finder, image)
-                #movCount += 1
-                #break
+            for c in cnts:
+                # if the contour is too small, ignore it
+                if cv.contourArea(c) < 500:
+                    continue
+                # compute the bounding box for the contour, draw it on the frame,
+                # and update the text
 
-            #if snapCount == 5:
-                #snapCount = 0
-                #littleImgPrv[i] = gray
-            #snapCount += 1
+                #(x, y, w, h) = cv.boundingRect(c)
+                #cv.rectangle(littleImg, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                if roiForDrive[i] is True:
+                    finder.direction = 'drive'
+                elif roiForLeave[i] is True:
+                    finder.direction = 'leave'
+                else:
+                    finder.direction = 'none '
+
+                movFlag = True
+                break
+
+            littleImgPrv[i] = gray
+
 ###############################################################################
-        plateFinder(data, finder, image)
+        if movFlag is True:
+            plateFinder(data, finder, image)
+
         finder.rawCapture.truncate(0)
 
 

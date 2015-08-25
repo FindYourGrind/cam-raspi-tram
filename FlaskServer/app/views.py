@@ -74,7 +74,7 @@ class Camera(object):
                 if cls.count == 3:
                     cls.count = 0
 
-                if time.time() - cls.last_access > 10:
+                if time.time() - cls.last_access > 5:
                     print("Timeout")
                     s.shutdown(2)
                     s.close()
@@ -90,6 +90,13 @@ class Camera(object):
                         break
                     except:
                         pass
+
+                    if time.time() - cls.last_access > 5:
+                        print("Timeout")
+                        s.close()
+                        cls.thread = None
+                        return
+
                 print("Connected")
 
 

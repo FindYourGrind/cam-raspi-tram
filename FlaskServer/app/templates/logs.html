@@ -1,5 +1,24 @@
 <!-- extend base layout -->
 {% extends "base.html" %}
 {% block content %}
-<h1>Log page</h1>
+<script type="text/javascript">
+    function foo(){
+        return "Hello"
+    }
+</script>
+<center><h1>Log page</h1></center>
+<table cellspacing="50" align="center">
+    <tr>
+        <td>
+            <script>    function foo(){
+        return "Hello"
+    }</script>
+        </td>
+        <td>
+            <textarea readonly="True">
+
+            </textarea>
+        </td>
+    <tr>
+</table>
 {% endblock %}

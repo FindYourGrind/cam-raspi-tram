@@ -7,7 +7,8 @@
         x.open("GET", "lastplate", false);
         x.send(null);
         lab = document.getElementById("lab");
-        lab.value = x.responseText;
+        str = x.responseText;
+        lab.value = str.slice(0, str.length - 7);
         setTimeout(arguments.callee, 500);
     }, 500)
 </script>
@@ -39,12 +40,6 @@
         </td>
     </tr>
 </table></center>
-<script>
-    setTimeout(function){
-        var x = new XMLHttpRequest();
-        x.open("GET")
-        }
-</script>
 <center><div>Last plate number finded:
             <input id="lab" size="30" value="Here will be a finded plate number">
         </div>
