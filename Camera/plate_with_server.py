@@ -141,6 +141,7 @@ class PlaitNumberFinder(object):
         count = 0
         x_mass = []
         x_massSorted = []
+        literals_mass = []
 
         #self.plaitNumberHigh = 64
         #self.plaitNumberWidth = 300
@@ -149,7 +150,7 @@ class PlaitNumberFinder(object):
             self.plaitNumberHigh = 50
             self.plaitNumberWidth = 300
 
-        numberForParsing = np.zeros((45, 45), np.uint8)
+        #numberForParsing = np.zeros((45, 45), np.uint8)
         if not isinstance(contours, type(None)):
             for cnt in contours:
                 x, y, w, h = cv.boundingRect(cnt)
@@ -166,13 +167,14 @@ class PlaitNumberFinder(object):
                     count += 1
                     literal = img[y:y + h, x:x + w]
                     literal = cv.resize(literal, (30, 45))
-                    tmp, literal = cv.threshold(literal, k1, 255, cv.THRESH_BINARY)
-                    cv.imwrite("literals\%u.jpg" % count, literal)
+                    #tmp, literal = cv.threshold(literal, k1, 255, cv.THRESH_BINARY)
+                    literals_mass.append(literal)
+                    #cv.imwrite("literals\%u.jpg" % count, literal)
 
-                    im = Image.open("literals\%u.jpg" % count)
-                    im.save("literals\%u.png" % count)
-                    im = Image.open("literals\%u.png" % count)
-                    im = im.convert("P")
+                    #im = Image.open("literals\%u.jpg" % count)
+                    #im.save("literals\%u.png" % count)
+                    #im = Image.open("literals\%u.png" % count)
+                    #im = im.convert("P")
 
         tmp = x_mass[:]
         tmp.sort()
@@ -185,16 +187,21 @@ class PlaitNumberFinder(object):
 
         if 8 < x_mass.__len__() < 7:
             return "None"
-        numberForParsing = np.zeros((55, (40 * x_mass.__len__() + 6), 3), np.uint8)
-        rows, cols, depth = numberForParsing.shape
+        numberForParsing = np.zeros((55, (40 * x_mass.__len__() + 6)), np.uint8)
+        rows, cols = numberForParsing.shape
         numberForParsing[0:0 + rows, 0:0 + cols] = 255
 
         for i in range(0, x_mass.__len__()):
             x_massSorted.append(x_mass.index(min(x_mass)) + 1)
             x_mass[x_mass.index(min(x_mass))] = 1000000
-            tmp = cv.imread('literals\%u.jpg' % x_massSorted[i])
+            #tmp = cv.imread('literals\%u.jpg' % x_massSorted[i])
+            tmp = literals_mass[x_massSorted[i] - 1]
             x = 40 * i + 3
             numberForParsing[5:50, x:x + 30] = tmp
+
+        self.saveImgInJPG('justNumber.jpg', numberForParsing)
+        self.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
+        numberForParsing = cv.imread('justNumber.jpg')
         return numberForParsing
 
     def saveImgInJPG(self, name, img):
@@ -388,8 +395,8 @@ def plateFinder(data, finder, image):
 
                 if justNumber is not "None":
 
-                    finder.saveImgInJPG('justNumber.jpg', justNumber)
-                    finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
+                    #finder.saveImgInJPG('justNumber.jpg', justNumber)
+                    #finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
                     numberForParsing = finder.openImgInPNG('justNumber.png')
                     #numberForParsing = cv.imencode('png', justNumber)
 
@@ -465,7 +472,9 @@ def DirectionDetector(data):
             lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, lastChangeTime)
 
         movFlag = False
+
 ################################################################
+
         g = gDivadeImg(image.copy())
         for i in range(0, 16):
             littleImg = next(g)
@@ -505,6 +514,7 @@ def DirectionDetector(data):
             littleImgPrv[i] = gray
 
 ###############################################################################
+
         if movFlag is True:
             plateFinder(data, finder, image)
 
