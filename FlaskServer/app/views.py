@@ -121,6 +121,11 @@ def login():
         providers=app.config['OPENID_PROVIDERS'])
 
 
+@app.route('/config')
+def config():
+    return render_template("config.html")
+
+
 @app.route('/video')
 def video():
     return render_template('video.html')
