@@ -48,9 +48,9 @@ class PlaitNumberFinder(object):
 
     def initCamera(self):
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (640, 480)
+        self.camera.resolution = (800, 600)
         self.camera.framerate = 60
-        self.rawCapture = PiRGBArray(self.camera, size=(640, 480))
+        self.rawCapture = PiRGBArray(self.camera, size=(800, 600))
 
         time.sleep(0.1)
 
@@ -439,7 +439,7 @@ def DirectionDetector(data):
 
     finder = PlaitNumberFinder()
     finder.initCamera()
-    finder.setHaarCascade('/home/pi/Camera/Camera/haarcascade_russian_plate_number.xml')
+    finder.setHaarCascade('/home/pi/Camera/cam-raspi-tram/Camera/haarcascade_russian_plate_number.xml')
 
     finder.newStandart = re.compile('[a-z]{2}\d{4}[a-z]{2}', re.IGNORECASE)
     finder.oldStandart = re.compile('\d{5}[a-z]{2}', re.IGNORECASE)
@@ -489,8 +489,7 @@ def DirectionDetector(data):
             thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
             thresh = cv.erode(thresh, None, iterations=2)
 
-            (img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,
-                cv.CHAIN_APPROX_SIMPLE)
+            (img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
             for c in cnts:
                 # if the contour is too small, ignore it

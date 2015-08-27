@@ -1,7 +1,7 @@
 <html>
   <head>
     {% if title %}
-        <title>{{title}} - Smart Parking</title>
+        <title>{{title}} - microblog</title>
     {% else %}
         <title>microblog</title>
     {% endif %}
@@ -17,6 +17,25 @@
             -mox-column-rule: 1px solid #ccc;
             column-rule: 1px solid #ccc;
         }
+
+        .icon {
+            display: inline-block;
+            position: relative;
+        }
+
+        .icon:hover:after {
+            content: attr(data-title);
+            position: absolute;
+            left: 0; right: 0; bottom: -25px;
+            z-index: 1;
+            background: rgba(0, 42, 167, 0.6);
+            color: #fff;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            padding: 5px 10px;
+            border: 1px solid #333;
+        }
     </style>
   </head>
   <body>
@@ -24,8 +43,7 @@
                         <a href="/video">Video</a>
                         <a href="/drivedirection">DriveDirection</a>
                         <a href="/plate">PlateNumberFinding</a>
-                        <a href="/logs">Logs</a>
-                        <a href="/config">Configurations</a></div></center>
+                        <a href="/logs">Logs</a></div></center>
     <hr>
     {% with messages = get_flashed_messages() %}
         {% if messages %}

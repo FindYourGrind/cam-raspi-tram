@@ -7,6 +7,7 @@ import threading
 import time
 import socket
 import os
+import subprocess
 
 
 class Camera(object):
@@ -119,11 +120,6 @@ def login():
         title='Sign In',
         form=form,
         providers=app.config['OPENID_PROVIDERS'])
-
-
-@app.route('/config')
-def config():
-    return render_template("config.html")
 
 
 @app.route('/video')
@@ -392,6 +388,22 @@ def lastplate():
         tmp = "No plate number finded"
     config.close()
     return tmp
+
+
+@app.route('/update', methods=['GET'])
+def update():
+    os.system("/home/pi/Camera/cam-raspi-tram/git pull")
+    mass = 'Camera is UPDATED'
+    return render_template("index.html",
+        title='Main',
+        msg=mass)
+
+
+@app.route('/reboot', methods=['GET'])
+def reboot():
+    #subprocess.check_call(['/home/pi/Camera/cam-raspi-tram/reboot.sh'])
+    os.system("/sbin/shutdown -r now")
+    return render_template('index.html')
 
 
 @app.route('/logs')
