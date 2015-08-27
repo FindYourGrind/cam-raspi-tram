@@ -2,15 +2,19 @@
 {% block content %}
 <script type="text/javascript">
     function reboot(){
-        var x = new XMLHttpRequest();
-        x.open("GET", "reboot", false);
-        x.send(null);
+        if (confirm("If you want to reboot press OK")){
+            var x = new XMLHttpRequest();
+            x.open("GET", "reboot", false);
+            x.send(null);
+        }
     }
 
     function update(){
         var x = new XMLHttpRequest();
         x.open("GET", "update", false);
         x.send(null);
+        str = x.responseText;
+        alert(str);
     }
 </script>
 <center><div><p><h3>{{msg}}</p></div></center>
@@ -21,7 +25,7 @@
             <img src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fmegaicons.net%2Fstatic%2Fimg%2Ficons_sizes%2F8%2F178%2F512%2Fupdates-downloading-updates-icon.png&f=1"
                  onclick="update()"
                  alt=""
-                 width="75" height="75"/>
+                 width="70" height="70"/>
             </div>
         </td>
         <td>
@@ -29,7 +33,7 @@
             <img src="https://images.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fwindows-8-metro-style%2F512%2Favailable_updates.png&f=1"
                  onclick="reboot()"
                  alt=""
-                 width="75" height="75"/>
+                 width="70" height="70"/>
             </div>
         </dt>
 </table>

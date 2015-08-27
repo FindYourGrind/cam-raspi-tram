@@ -104,10 +104,8 @@ class Camera(object):
 @app.route('/')
 @app.route('/index')
 def index():
-    mass = 'Camera is ON'
     return render_template("index.html",
-        title='Main',
-        msg=mass)
+        title='Main')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -392,11 +390,10 @@ def lastplate():
 
 @app.route('/update', methods=['GET'])
 def update():
-    os.system("/home/pi/Camera/cam-raspi-tram/git pull")
-    mass = 'Camera is UPDATED'
-    return render_template("index.html",
-        title='Main',
-        msg=mass)
+    os.chdir("/home/pi/Camera/cam-raspi-tram")
+    #mass = os.system("git pull")
+    mass = subprocess.check_output("git pull", shell=True)
+    return mass
 
 
 @app.route('/reboot', methods=['GET'])
