@@ -392,6 +392,8 @@ def lastplate():
 def update():
     os.chdir("/home/pi/Camera/cam-raspi-tram")
     #mass = os.system("git pull")
+    subprocess.check_output("git reset --hard", shell=True)
+    subprocess.check_output("git clean -df", shell=True)
     mass = subprocess.check_output("git pull", shell=True)
     return mass
 
