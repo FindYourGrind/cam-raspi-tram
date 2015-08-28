@@ -60,7 +60,17 @@
         setTimeout(arguments.callee, 500);
     }, 500)
 
-</script>
+    function checkForm(form){
+        for(i = 1; i < 17; i ++){
+            if(form.elements.["droi" + i]).value){
+                if(form.elements.["lroi" + i]).value){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    </script>
 <center><h1>Drive Direction</h1></center>
 <table cellspacing="50" align="center">
     <tr>
@@ -76,7 +86,8 @@
         </td>
     <td>
         <p>
-        <form name="config" action="", method="post">
+        <form onsubmit="reurn checkForm(this)" name="config" action="", method="post">
+        <div id="contact-form">
             <center><h2>Configuration</h2></center>
             {{form.hidden_tag()}}
             Select ROI for driving:
@@ -126,6 +137,7 @@
                     <td>{{form.roi16ForLeave}} ROI16</td>
                 </tr>
             </table>
+            <p id=hh"err_roi" class="error"></p>
             <p><center><input type="submit" value="Configurate"></center></p>
         </form>
     </p>
