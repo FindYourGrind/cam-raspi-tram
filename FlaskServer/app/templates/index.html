@@ -22,7 +22,7 @@
     <tr>
         <td>
             <div class="icon" data-title="UPDATE">
-            <img src="https://images.duckduckgo.com/iu/?u=http%3A%2F%2Fmegaicons.net%2Fstatic%2Fimg%2Ficons_sizes%2F8%2F178%2F512%2Fupdates-downloading-updates-icon.png&f=1"
+            <img src="{{ url_for('static', filename='update.png') }}"
                  onclick="update()"
                  alt=""
                  width="70" height="70"/>
@@ -30,7 +30,7 @@
         </td>
         <td>
             <div class="icon" data-title="RESTART">
-            <img src="https://images.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fwindows-8-metro-style%2F512%2Favailable_updates.png&f=1"
+            <img src="{{ url_for('static', filename='reboot_1.png') }}"
                  onclick="reboot()"
                  alt=""
                  width="70" height="70"/>
