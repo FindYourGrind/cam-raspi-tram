@@ -21,6 +21,18 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(1)
 
+def StartLog():
+    try:
+        StartLog.flag += 1
+    except AttributeError:
+        path = '/var/www/programm_log.txt'
+        base, ext = os.path.splitext(path)
+        logs = open("{}{}".format(base, ext), mode='a')
+        logs.write(time.asctime() + " Camera is started\r\n\r\n")
+        logs.close()
+        print(time.asctime() + " Camera is started\r\n")
+
+        StartLog.flag = 0
 
 class PlaitNumberFinder(object):
     """Estimator of string of plait number. OpenCV 3.0.0"""
@@ -48,9 +60,9 @@ class PlaitNumberFinder(object):
 
     def initCamera(self):
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (800, 600)
+        self.camera.resolution = (1000, 750)
         self.camera.framerate = 60
-        self.rawCapture = PiRGBArray(self.camera, size=(800, 600))
+        self.rawCapture = PiRGBArray(self.camera, size=(1000, 750))
 
         time.sleep(0.1)
 
@@ -539,6 +551,7 @@ MyManager.register('ImgData', ImgData)
 
 if __name__ == '__main__':
 
+    StartLog()
     manager = Manager()
 
     data = manager.ImgData()

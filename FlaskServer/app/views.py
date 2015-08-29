@@ -162,22 +162,22 @@ def ConfigStringGen(form):
 
     string += '\r\n'
 
-    string += ('ROI1  for drive is __' + str(form.roi1ForLeave.data) + '__ \r\n')
-    string += ('ROI2  for drive is __' + str(form.roi2ForLeave.data) + '__ \r\n')
-    string += ('ROI3  for drive is __' + str(form.roi3ForLeave.data) + '__ \r\n')
-    string += ('ROI4  for drive is __' + str(form.roi4ForLeave.data) + '__ \r\n')
-    string += ('ROI5  for drive is __' + str(form.roi5ForLeave.data) + '__ \r\n')
-    string += ('ROI6  for drive is __' + str(form.roi6ForLeave.data) + '__ \r\n')
-    string += ('ROI7  for drive is __' + str(form.roi7ForLeave.data) + '__ \r\n')
-    string += ('ROI8  for drive is __' + str(form.roi8ForLeave.data) + '__ \r\n')
-    string += ('ROI9  for drive is __' + str(form.roi9ForLeave.data) + '__ \r\n')
-    string += ('ROI10 for drive is __' + str(form.roi10ForLeave.data) + '__ \r\n')
-    string += ('ROI11 for drive is __' + str(form.roi11ForLeave.data) + '__ \r\n')
-    string += ('ROI12 for drive is __' + str(form.roi12ForLeave.data) + '__ \r\n')
-    string += ('ROI13 for drive is __' + str(form.roi13ForLeave.data) + '__ \r\n')
-    string += ('ROI14 for drive is __' + str(form.roi14ForLeave.data) + '__ \r\n')
-    string += ('ROI15 for drive is __' + str(form.roi15ForLeave.data) + '__ \r\n')
-    string += ('ROI16 for drive is __' + str(form.roi16ForLeave.data) + '__ \r\n')
+    string += ('ROI1  for leave is __' + str(form.roi1ForLeave.data) + '__ \r\n')
+    string += ('ROI2  for leave is __' + str(form.roi2ForLeave.data) + '__ \r\n')
+    string += ('ROI3  for leave is __' + str(form.roi3ForLeave.data) + '__ \r\n')
+    string += ('ROI4  for leave is __' + str(form.roi4ForLeave.data) + '__ \r\n')
+    string += ('ROI5  for leave is __' + str(form.roi5ForLeave.data) + '__ \r\n')
+    string += ('ROI6  for leave is __' + str(form.roi6ForLeave.data) + '__ \r\n')
+    string += ('ROI7  for leave is __' + str(form.roi7ForLeave.data) + '__ \r\n')
+    string += ('ROI8  for leave is __' + str(form.roi8ForLeave.data) + '__ \r\n')
+    string += ('ROI9  for leave is __' + str(form.roi9ForLeave.data) + '__ \r\n')
+    string += ('ROI10 for leave is __' + str(form.roi10ForLeave.data) + '__ \r\n')
+    string += ('ROI11 for leave is __' + str(form.roi11ForLeave.data) + '__ \r\n')
+    string += ('ROI12 for leave is __' + str(form.roi12ForLeave.data) + '__ \r\n')
+    string += ('ROI13 for leave is __' + str(form.roi13ForLeave.data) + '__ \r\n')
+    string += ('ROI14 for leave is __' + str(form.roi14ForLeave.data) + '__ \r\n')
+    string += ('ROI15 for leave is __' + str(form.roi15ForLeave.data) + '__ \r\n')
+    string += ('ROI16 for leave is __' + str(form.roi16ForLeave.data) + '__ \r\n')
 
     return string
 
@@ -395,16 +395,64 @@ def update():
     subprocess.check_output("git reset --hard", shell=True)
     subprocess.check_output("git clean -df", shell=True)
     mass = subprocess.check_output("git pull", shell=True)
+
+    if mass.find('Already') != -1:
+        path = '/var/www/programm_log.txt'
+        base, ext = os.path.splitext(path)
+        logs = open("{}{}".format(base, ext), mode='a')
+        logs.write(time.asctime() + " Camera is updated\r\n\r\n")
+        logs.close()
+        print(time.asctime() + " Camera is updated\r\n")
+
     return mass
 
 
 @app.route('/reboot', methods=['GET'])
 def reboot():
-    #subprocess.check_call(['/home/pi/Camera/cam-raspi-tram/reboot.sh'])
+    path = '/var/www/programm_log.txt'
+    base, ext = os.path.splitext(path)
+
+    logs = open("{}{}".format(base, ext), mode='a')
+    logs.write(time.asctime() + " Server is forcibly restarted\r\n")
+    logs.close()
+
     os.system("/sbin/shutdown -r now")
+
     return render_template('index.html')
 
 
 @app.route('/logs')
 def logs():
-    return render_template('logs.html')
+    path = '/var/www/plate_number_logs.txt'
+    base, ext = os.path.splitext(path)
+    fl = open("{}{}".format(base, ext), mode='r')
+    pl = ''.join(fl.readlines())
+    fl.close()
+    pl.replace('\r\n', '\\r\\n')
+
+    path = '/var/www/plate_number_logs_err.txt'
+    base, ext = os.path.splitext(path)
+    fl = open("{}{}".format(base, ext), mode='r')
+    ple = ''.join(fl.readlines())
+    fl.close()
+    ple.replace('\r\n', '\\r\\n')
+
+    path = '/var/www/config_drive_direction.txt'
+    base, ext = os.path.splitext(path)
+    fl = open("{}{}".format(base, ext), mode='r')
+    c = ''.join(fl.readlines())
+    fl.close()
+    c.replace('\r\n', '\\r\\n')
+
+    path = '/var/www/programm_log.txt'
+    base, ext = os.path.splitext(path)
+    fl = open("{}{}".format(base, ext), mode='r')
+    prgl = ''.join(fl.readlines())
+    fl.close()
+    prgl.replace('\r\n', '\\r\\n')
+
+    return render_template('logs.html',
+                           plate_logs = pl,
+                           plate_logs_err = ple,
+                           config = c,
+                           programm_logs = prgl)

@@ -1,22 +1,33 @@
 <!-- extend base layout -->
 {% extends "base.html" %}
 {% block content %}
-<script type="text/javascript">
-    function foo(){
-        return "Hello"
-    }
-</script>
 <center><h1>Log page</h1></center>
 <table cellspacing="50" align="center">
     <tr>
         <td>
+            <h3>Plate Finder logs</h3>
             <textarea readonly="True">
-
+            {{plate_logs}}
             </textarea>
         </td>
         <td>
+            <h3>Plate Finder false logs </h3>
             <textarea readonly="True">
-
+            {{plate_logs_err}}
+            </textarea>
+        </td>
+    <tr>
+    <tr>
+        <td>
+            <h3>ROI configuration</h3>
+            <textarea readonly="True">
+            {{config}}
+            </textarea>
+        </td>
+        <td>
+            <h3>Programm logs</h3>
+            <textarea readonly="True">
+            {{programm_logs}}
             </textarea>
         </td>
     <tr>
