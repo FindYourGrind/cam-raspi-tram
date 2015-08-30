@@ -128,7 +128,7 @@ def video():
 def gen(cam, picname):
     while True:
         frame = cam.get_frame(picname)
-        time.sleep(0.1)
+        time.sleep(0.15)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
@@ -452,7 +452,7 @@ def logs():
     prgl.replace('\r\n', '\\r\\n')
 
     return render_template('logs.html',
-                           plate_logs = pl,
-                           plate_logs_err = ple,
-                           config = c,
-                           programm_logs = prgl)
+                           plate_logs=pl,
+                           plate_logs_err=ple,
+                           config=c,
+                           programm_logs=prgl)

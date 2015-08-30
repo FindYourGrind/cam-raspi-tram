@@ -1,34 +1,32 @@
 <!-- extend base layout -->
 {% extends "base.html" %}
 {% block content %}
+<style>
+    textarea {
+        resize: vertical;
+        text-indent: 0px;
+    }
+</style>
 <center><h1>Log page</h1></center>
-<table cellspacing="50" align="center">
+<table cellspacing="35" align="center">
     <tr>
         <td>
             <h3>Plate Finder logs</h3>
-            <textarea readonly="True">
-            {{plate_logs}}
-            </textarea>
+            <textarea readonly="True" cols="65" rows="8">{{plate_logs}}</textarea>
         </td>
         <td>
             <h3>Plate Finder false logs </h3>
-            <textarea readonly="True">
-            {{plate_logs_err}}
-            </textarea>
+            <textarea readonly="True" cols="65" rows="8">{{plate_logs_err}}</textarea>
         </td>
     <tr>
     <tr>
         <td>
             <h3>ROI configuration</h3>
-            <textarea readonly="True">
-            {{config}}
-            </textarea>
+            <textarea readonly="True" cols="65" rows="8">{{config}}</textarea>
         </td>
         <td>
             <h3>Programm logs</h3>
-            <textarea readonly="True">
-            {{programm_logs}}
-            </textarea>
+            <textarea readonly="True" cols="65" rows="8">{{programm_logs}}</textarea>
         </td>
     <tr>
 </table>
