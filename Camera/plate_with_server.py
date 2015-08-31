@@ -527,7 +527,9 @@ def DirectionDetector(data):
 ###############################################################################
 
         if movFlag is True:
-            plateFinder(data, finder, image)
+            row, cols, depth = image.shape
+            tmp = image[cols / 5:4 * cols / 5, row / 5:4 * row / 5]
+            plateFinder(data, finder, tmp)
 
         finder.rawCapture.truncate(0)
 

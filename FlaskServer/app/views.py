@@ -22,6 +22,7 @@ class Camera(object):
     last_access = 0  # time of last client access to the camera
     main_img = None
     count = 0
+    unlock= True
 
     def initialize(self):
         if Camera.thread is None:
@@ -35,16 +36,17 @@ class Camera(object):
 
     def get_frame(self, picname):
         Camera.last_access = time.time()
-        self.initialize()
+        if Camera.unlock:
+            self.initialize()
 
-        if picname == 'generalview':
-            return Camera.frame
-        elif picname == 'platenumber':
-            return Camera.plate
-        elif picname == 'platenumberthreash':
-            return Camera.threash
-        #elif picname == 'generalviewwithroi':
-        #    return Camera.divade
+            if picname == 'generalview':
+                return Camera.frame
+            elif picname == 'platenumber':
+                return Camera.plate
+            elif picname == 'platenumberthreash':
+                return Camera.threash
+            #elif picname == 'generalviewwithroi':
+            #    return Camera.divade
 
     @classmethod
     def _thread(cls):
@@ -83,6 +85,7 @@ class Camera(object):
                     break
             except:
                 print('Connection error')
+                cls.unlock = False
                 #s.close()
                 while True:
                     try:
@@ -99,6 +102,7 @@ class Camera(object):
                         return
 
                 print("Connected")
+                cls.unlock = True
 
 
 @app.route('/')
