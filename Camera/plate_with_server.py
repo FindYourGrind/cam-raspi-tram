@@ -13,6 +13,7 @@ import pytesseract
 import re
 import copy
 import os
+import io
 
 
 HOST = '127.0.0.1'        # Symbolic name meaning all available interfaces
@@ -20,6 +21,7 @@ PORT = 50007              # Arbitrary non-privileged port
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(1)
+
 
 def StartLog():
     try:
@@ -33,6 +35,7 @@ def StartLog():
         print(time.asctime() + " Camera is started\r\n")
 
         StartLog.flag = 0
+
 
 class PlaitNumberFinder(object):
     """Estimator of string of plait number. OpenCV 3.0.0"""
@@ -60,9 +63,10 @@ class PlaitNumberFinder(object):
 
     def initCamera(self):
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (1000, 750)
-        self.camera.framerate = 60
-        self.rawCapture = PiRGBArray(self.camera, size=(1000, 750))
+        self.camera.resolution = (800, 600)
+        self.camera.framerate = 80
+        self.rawCapture = PiRGBArray(self.camera, size=(800, 600))
+        #self.rawCapture = io.BytesIO()
 
         time.sleep(0.1)
 
@@ -339,27 +343,37 @@ def server(data):
                 break
 
 
-def gDivadeImg(img):
+def gDivadeImg(img, number):
     row, cols, depth = img.shape
     width = cols / 5
     high = row / 5
+    count = 0
     for i in range(0, 5):
-        yield (img[0:high, (i * width):(width * (i + 1))])
+        if number[count] < 5:
+            yield (img[0:high, (number[count] * width):(width * (number[count] + 1))])
+            count += 1
     for i in range(0, 3):
-        yield (img[(high * (i + 1)):(high * (i + 1) + high), (cols - width):cols])
+        if number[count] < 8:
+            yield (img[(high * (number[count] - 5 + 1)):(high * (number[count] - 5 + 1) + high), (cols - width):cols])
+            count += 1
     for i in range(0, 5):
-        yield (img[(row - high):row, ((4 - i) * width):(width * ((4 - i) + 1))])
+        if number[count] < 13:
+            yield (img[(row - high):row, ((4 - number[count] + 8) * width):(width * ((4 - number[count] + 8) + 1))])
+            count += 1
     for i in range(0, 3):
-        yield (img[(high * ((2 - i) + 1)):(high * ((2 - i) + 1) + high), 0:width])
+        if number[count] < 16:
+            yield (img[(high * (-number[count] + 15)):((high * (-number[count] + 15)) + high), 0:width])
+            count += 1
 
 
-def configurateDetector(path, drive, leave, time):
+def configurateDetector(path, drive, leave, activeRoi, time):
     base, ext = os.path.splitext(path)
     config = open("{}{}".format(base, ext), mode='r')
     for i in range(0, 16):
         tmp = config.readline()
         if tmp.find('__True__') > 0:
             drive[i] = True
+            activeRoi.append(i)
         else:
             drive[i] = False
     tmp = config.readline()
@@ -367,10 +381,12 @@ def configurateDetector(path, drive, leave, time):
         tmp = config.readline()
         if tmp.find('__True__') > 0:
             leave[i] = True
+            activeRoi.append(i)
         else:
             leave[i] = False
     time = os.path.getmtime(path)
     config.close()
+    activeRoi.sort()
     print("Detector is reconfigurated")
     return time
 
@@ -457,16 +473,19 @@ def DirectionDetector(data):
     finder.oldStandart = re.compile('\d{5}[a-z]{2}', re.IGNORECASE)
     finder.allDigit = re.compile('\d{7}', re.IGNORECASE)
 
-    littleImgPrv = [None for i in range(0, 16)]
+    littleImgPrv = [None for i in xrange(0, 16)]
     movCount = 0
-    snapCount = 0
-    roiForDrive = [0 for i in range(0, 16)]
-    roiForLeave = [0 for i in range(0, 16)]
+    snapCount = [0 for i in xrange(0, 16)]
+    roiForDrive = [0 for i in xrange(0, 16)]
+    roiForLeave = [0 for i in xrange(0, 16)]
     lastChangeTime = 0
     confPath = '/var/www/config_drive_direction.txt'
     movFlag = False
 
-    lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, lastChangeTime)
+    activeRoi = []
+    firstROI = 0
+
+    lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
 
     for frame in finder.getSnapShot():
         image = frame.array
@@ -481,14 +500,14 @@ def DirectionDetector(data):
         if getLastModifieTime(confPath) == lastChangeTime:
             pass
         else:
-            lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, lastChangeTime)
+            lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
 
         movFlag = False
 
 ################################################################
 
-        g = gDivadeImg(image.copy())
-        for i in range(0, 16):
+        g = gDivadeImg(image.copy(), activeRoi)
+        for i in activeRoi:
             littleImg = next(g)
             gray = cv.cvtColor(littleImg.copy(), cv.COLOR_BGR2GRAY)
             gray = cv.GaussianBlur(gray, (21, 21), 0)
@@ -505,33 +524,44 @@ def DirectionDetector(data):
 
             for c in cnts:
                 # if the contour is too small, ignore it
-                if cv.contourArea(c) < 500:
+                if cv.contourArea(c) < 300:
                     continue
                 # compute the bounding box for the contour, draw it on the frame,
                 # and update the text
-
+                movFlag = True
                 #(x, y, w, h) = cv.boundingRect(c)
                 #cv.rectangle(littleImg, (x, y), (x + w, y + h), (0, 0, 255), 2)
                 if roiForDrive[i] is True:
-                    finder.direction = 'drive'
+                    if firstROI != 1:
+                        finder.direction = 'drive'
+                        firstROI = 0
+                        continue
+                    firstROI = 1
                 elif roiForLeave[i] is True:
-                    finder.direction = 'leave'
+                    if firstROI != 2:
+                        finder.direction = 'leave'
+                        firstROI = 0
+                        continue
+                    firstROI = 2
                 else:
                     finder.direction = 'none '
-
-                movFlag = True
+                    #firstROI = 0
                 break
 
+            #if snapCount[i] == 1:
             littleImgPrv[i] = gray
+            #    snapCount[i] = 0
+            #snapCount[i] += 1
 
 ###############################################################################
 
         if movFlag is True:
-            row, cols, depth = image.shape
-            tmp = image[cols / 5:4 * cols / 5, row / 5:4 * row / 5]
-            plateFinder(data, finder, tmp)
+            #row, cols, depth = image.shape
+            #tmp = image[cols / 5:4 * cols / 5, row / 5:4 * row / 5]
+            plateFinder(data, finder, image)
 
         finder.rawCapture.truncate(0)
+        #time.sleep(0.01)
 
 
 class MyManager(BaseManager):

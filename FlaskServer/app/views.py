@@ -87,9 +87,9 @@ class Camera(object):
                 print('Connection error')
                 cls.unlock = False
                 #s.close()
+                print("Trying to connect")
                 while True:
                     try:
-                        print("Trying to connect")
                         s.connect((HOST, PORT))
                         break
                     except:
