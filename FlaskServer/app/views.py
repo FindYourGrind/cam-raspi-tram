@@ -408,6 +408,9 @@ def update():
         logs.close()
         print(time.asctime() + " Camera is updated\r\n")
 
+        os.chdir("/home/pi")
+        subprocess.check_output("/etc/init.d/CameraService.sh restart", shell=True)
+
     return mass
 
 
