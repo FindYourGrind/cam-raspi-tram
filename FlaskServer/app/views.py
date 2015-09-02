@@ -67,11 +67,11 @@ class Camera(object):
                 s.sendall(name)
 
                 if name == 'generalview':
-                    cls.frame = s.recv(76800)
+                    cls.frame = s.recv(80000)
                 elif name == 'platenumber':
-                    cls.plate = s.recv(76800)
+                    cls.plate = s.recv(80000)
                 elif name == 'platenumberthreash':
-                    cls.threash = s.recv(76800)
+                    cls.threash = s.recv(80000)
 
                 cls.count += 1
                 if cls.count == 3:

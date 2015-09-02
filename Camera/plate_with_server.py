@@ -63,15 +63,16 @@ class PlaitNumberFinder(object):
 
     def initCamera(self):
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (800, 600)
+        self.camera.resolution = (500, 375)
         self.camera.framerate = 80
-        self.rawCapture = PiRGBArray(self.camera, size=(800, 600))
+        self.rawCapture = PiRGBArray(self.camera, size=(500, 375))
         #self.rawCapture = io.BytesIO()
 
         time.sleep(0.1)
 
     def getSnapShot(self):
         return self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True)
+        #return self.camera.capture_continuous(self.rawCapture, format="jpeg", use_video_port=True)
 
     def printImg(self, *args):
         i = 1
@@ -283,6 +284,7 @@ class ImgData(object):
             return 0
         else:
             return decode(self.frame)
+            #return self.frame
 
     def setPlateImg(self, frame):
         self.plateImg = frame
@@ -310,6 +312,7 @@ class ImgData(object):
             return 0
         else:
             return decode(self.DivadeImg)
+            #return self.DivadeImg
 
 
 def server(data):
@@ -482,30 +485,58 @@ def DirectionDetector(data):
     confPath = '/var/www/config_drive_direction.txt'
     movFlag = False
 
+    configCount = 0
     activeRoi = []
     firstROI = 0
 
     lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
 
     for frame in finder.getSnapShot():
+        ###############
+        #st = time.time()
+        #print 'StartTime ' + str(st)
+        ################
+        #finder.rawCapture.seek(0)
+        #image = finder.rawCapture.read()
+        ################
+        #print 'Read jpg ' + str(time.time() - st)
+        #st = time.time()
+        ###############
+        #image_arr = np.asarray(bytearray(image), dtype=np.uint8)
+        #image = cv.imdecode(image_arr, cv.IMREAD_COLOR)
+        ################
+        #print 'Decode jpg ' + str(time.time() - st)
+        #st = time.time()
+        ###############
         image = frame.array
-
         generalview = image.copy()
-        cv.putText(generalview, "fps=%u" % finder.calcFps(), (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        #print 'Read jpg ' + str(time.time() - st)
+        #st = time.time()
+        finder.rawCapture.seek(0)
+
+        fpsc = finder.calcFps()
+        #print fpsc
+        cv.putText(generalview, "fps=%u" % fpsc, (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         data.setFrame(generalview)
 
         #divadeImg = drawDiviadeLines(image.copy())
         #data.setDivadeImg(divadeImg)
 
-        if getLastModifieTime(confPath) == lastChangeTime:
-            pass
-        else:
-            lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
+        if configCount == 100:
+            configCount = 0
+            if getLastModifieTime(confPath) == lastChangeTime:
+                pass
+            else:
+                lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
+        configCount += 1
 
         movFlag = False
 
 ################################################################
-
+        ################
+        #print 'Stuff jpg ' + str(time.time() - st)
+        #st = time.time()
+        ###############
         g = gDivadeImg(image.copy(), activeRoi)
         for i in activeRoi:
             littleImg = next(g)
@@ -554,14 +585,25 @@ def DirectionDetector(data):
             #snapCount[i] += 1
 
 ###############################################################################
-
+        ################
+        #print 'Drive jpg ' + str(time.time() - st)
+        #st = time.time()
+        ###############
         if movFlag is True:
             #row, cols, depth = image.shape
             #tmp = image[cols / 5:4 * cols / 5, row / 5:4 * row / 5]
             plateFinder(data, finder, image)
-
+            ################
+            #print 'Plate jpg ' + str(time.time() - st)
+            #st = time.time()
+            ###############
         finder.rawCapture.truncate(0)
-        #time.sleep(0.01)
+        #################
+        #print 'Trunc jpg ' + str(time.time() - st)
+        #st = time.time()
+        #print 'End time ' + str(st)
+        ################
+        #time.sleep(0.1)
 
 
 class MyManager(BaseManager):
