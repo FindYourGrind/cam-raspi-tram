@@ -14,7 +14,7 @@ import re
 import copy
 import os
 import io
-
+from scipy.misc import toimage
 
 HOST = '127.0.0.1'        # Symbolic name meaning all available interfaces
 PORT = 50007              # Arbitrary non-privileged port
@@ -63,9 +63,9 @@ class PlaitNumberFinder(object):
 
     def initCamera(self):
         self.camera = picamera.PiCamera()
-        self.camera.resolution = (500, 375)
+        self.camera.resolution = (320, 240)
         self.camera.framerate = 80
-        self.rawCapture = PiRGBArray(self.camera, size=(500, 375))
+        self.rawCapture = PiRGBArray(self.camera, size=(320, 240))
         #self.rawCapture = io.BytesIO()
 
         time.sleep(0.1)
@@ -85,12 +85,20 @@ class PlaitNumberFinder(object):
 
     def detectPlaitNumber(self, img):
         plaitNumber = self.number_cascade.detectMultiScale(img, 1.3, 5)
+        #if isinstance(plaitNumber, tuple):
+        #    print "Plate Number Finded"
+        #    print type(plaitNumber)
+        print plaitNumber
         for (x, y, w, h) in plaitNumber:
             self.plaitNumberImage = img[y:y + h, x:x + w]
-            height, width = self.plaitNumberImage.shape[:2]
-            self.plaitNumberImage = cv.resize(self.plaitNumberImage, (width * 100 / height, 100),
-                                              interpolation=cv.INTER_CUBIC)
+            #height, width = self.plaitNumberImage.shape[:2]
+            #self.plaitNumberImage = cv.resize(self.plaitNumberImage, (width * 100 / height, 100),
+            #                                  interpolation=cv.INTER_CUBIC)
+            self.saveImgInJPG("plate.jpg", self.plaitNumberImage)
             return self.plaitNumberImage
+        else:
+            print "Plate Number Not Finded"
+            return None
 
     def doGrayImg(self, img):
         return cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -107,7 +115,8 @@ class PlaitNumberFinder(object):
             image, contours, hierarchy = cv.findContours(treshImage, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
             if isinstance(contours, type(None)):
                 print("contours not found")
-                return 0
+                return None
+            print "Hi theare"
             return contours
         return None
 
@@ -127,6 +136,7 @@ class PlaitNumberFinder(object):
                     self.plaitNumberHigh = h
                     self.plaitNumberWidth = w
                     return(grayImg[y:y + h, x:x + w])
+        print "hi thare"
         return 0
 
     def findLinesHough(self, edgesImg):
@@ -216,9 +226,9 @@ class PlaitNumberFinder(object):
             x = 40 * i + 3
             numberForParsing[5:50, x:x + 30] = tmp
 
-        self.saveImgInJPG('justNumber.jpg', numberForParsing)
-        self.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
-        numberForParsing = cv.imread('justNumber.jpg')
+        #self.saveImgInJPG('justNumber.jpg', numberForParsing)
+        #self.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
+        #numberForParsing = cv.imread('justNumber.jpg')
         return numberForParsing
 
     def saveImgInJPG(self, name, img):
@@ -270,20 +280,45 @@ class ImgData(object):
         self.plateImg = np.zeros((240, 320, 3), np.uint8)
         self.plateThreash = np.zeros((240, 320, 3), np.uint8)
         self.DivadeImg = np.zeros((240, 320, 3), np.uint8)
+        self.cars = []
+        self.carCount = 0
+        self.decodeFlag = 0
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             cls.instance = super(ImgData, cls).__new__(cls)
         return cls.instance
 
-    def setFrame(self, frame):
+    def setCars(self, cars):
+        self.cars.append(cars)
+
+    def delFirstCars(self):
+        del self.cars[0]
+
+    def getCars(self):
+        return self.cars
+
+    def getCarCount(self):
+        return self.carCount
+
+    def incCarCount(self):
+        self.carCount += 1
+
+    def decCarCount(self):
+        self.carCount -= 1
+
+    def setFrame(self, frame, decode):
         self.frame = frame
+        self.decodeFlag = 0
 
     def getFrame(self):
         if isinstance(self.frame, type(None)):
             return 0
         else:
-            return decode(self.frame)
+            if self.decodeFlag:
+                return self.frame
+            else:
+                return decode(self.frame)
             #return self.frame
 
     def setPlateImg(self, frame):
@@ -346,6 +381,30 @@ def server(data):
                 break
 
 
+def plate(data):
+
+    finder = PlaitNumberFinder()
+    finder.setHaarCascade('/home/pi/Camera/cam-raspi-tram/Camera/haarcascade_russian_plate_number.xml')
+
+    finder.newStandart = re.compile('[a-z]{2}\d{4}[a-z]{2}', re.IGNORECASE)
+    finder.oldStandart = re.compile('\d{5}[a-z]{2}', re.IGNORECASE)
+    finder.allDigit = re.compile('\d{7}', re.IGNORECASE)
+
+    while True:
+        if data.getCarCount() > 0:
+            cars = data.getCars()
+            for i in range(0, len(cars[0][1]), 2):
+                img = cars[0][1][len(cars[0][1]) - 1 - i]
+                image_arr = np.asarray(bytearray(img), dtype=np.uint8)
+                image = cv.imdecode(image_arr, cv.IMREAD_COLOR)
+                if plateFinder(data, finder, image):
+                    break
+
+            data.delFirstCars()
+            data.decCarCount()
+            print 'Actual cars (removed)' + str(data.getCarCount())
+
+
 def gDivadeImg(img, number):
     row, cols, depth = img.shape
     width = cols / 5
@@ -402,11 +461,12 @@ def getLastModifieTime(path):
 #Plate Finder
 def plateFinder(data, finder, image):
 
+    res = 1
     cutNumberImg = finder.detectPlaitNumber(image)
-    data.setPlateImg(cutNumberImg)
 
     if not isinstance(cutNumberImg, type(None)):
-
+        print "HI"
+        data.setPlateImg(cutNumberImg)
         finder.plaitNumberImage = cutNumberImg
 
         cutNumberImgGrey = finder.doGrayImg(cutNumberImg)
@@ -422,16 +482,18 @@ def plateFinder(data, finder, image):
                 cutNumberImgTresh = copy.copy(justNumber)
                 contours = finder.findContours(cutNumberImgTresh)
                 justNumber = finder.getPlaitNumberByLiterals(contours, justNumber, 140)
-                data.setPlateThreash(justNumber)
 
                 if justNumber is not "None":
 
                     #finder.saveImgInJPG('justNumber.jpg', justNumber)
                     #finder.openJPGsavePNG('justNumber.jpg', 'justNumber.png')
-                    numberForParsing = finder.openImgInPNG('justNumber.png')
-                    #numberForParsing = cv.imencode('png', justNumber)
+                    #numberForParsing = finder.openImgInPNG('justNumber.png')
+                    numberForParsing = toimage(justNumber)
 
                     stringNumber = finder.parseImgByTess(numberForParsing)
+
+                    #justNumber = cv.imdecode(justNumber, cv.IMREAD_COLOR)
+                    #data.setPlateThreash(justNumber)
 
                     n = finder.newStandart.match(stringNumber)
                     o = finder.oldStandart.match(stringNumber)
@@ -459,26 +521,57 @@ def plateFinder(data, finder, image):
                         log.write(string + '\r\n')
                     else:
                         string = time.asctime() + "   " + stringNumber + "   " + finder.direction + "   With Errors!!"
+                        res = 0
                         print(string)
                         errlog.write(string + '\r\n')
                     log.close()
                     errlog.close()
                     #time.sleep(1)
+                    return res
+
+
+def get5secVide0(data):
+    snapShots = []
+    with picamera.PiCamera() as camera:
+        camera.resolution = (2560, 1920)
+        camera.framerate = 80
+        rawCapture = io.BytesIO()
+        time.sleep(0.1)
+        count = time.time()
+
+        for frame in camera.capture_continuous(rawCapture, format="jpeg", use_video_port=True):
+
+            rawCapture.seek(0)
+            #image = Image.open(frame)
+            #rawCapture.seek(0)
+            img = frame.read()
+            snapShots.append(img)
+            if time.time() - count > 3:
+                break
+
+            rawCapture.seek(0)
+            rawCapture.truncate(0)
+        camera.close()
+        data.setCars((time.asctime(), snapShots))
+        data.incCarCount()
+        print 'Actual cars (added)' + str(data.getCarCount())
+        return
 
 
 def DirectionDetector(data):
 
     finder = PlaitNumberFinder()
-    finder.initCamera()
-    finder.setHaarCascade('/home/pi/Camera/cam-raspi-tram/Camera/haarcascade_russian_plate_number.xml')
+    #finder.setHaarCascade('/home/pi/Camera/cam-raspi-tram/Camera/haarcascade_russian_plate_number.xml')
 
-    finder.newStandart = re.compile('[a-z]{2}\d{4}[a-z]{2}', re.IGNORECASE)
-    finder.oldStandart = re.compile('\d{5}[a-z]{2}', re.IGNORECASE)
-    finder.allDigit = re.compile('\d{7}', re.IGNORECASE)
+    #finder.newStandart = re.compile('[a-z]{2}\d{4}[a-z]{2}', re.IGNORECASE)
+    #finder.oldStandart = re.compile('\d{5}[a-z]{2}', re.IGNORECASE)
+    #finder.allDigit = re.compile('\d{7}', re.IGNORECASE)
 
     littleImgPrv = [None for i in xrange(0, 16)]
-    movCount = 0
-    snapCount = [0 for i in xrange(0, 16)]
+
+    #movCount = 0
+    #snapCount = [0 for i in xrange(0, 16)]
+
     roiForDrive = [0 for i in xrange(0, 16)]
     roiForLeave = [0 for i in xrange(0, 16)]
     lastChangeTime = 0
@@ -491,119 +584,84 @@ def DirectionDetector(data):
 
     lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
 
-    for frame in finder.getSnapShot():
-        ###############
-        #st = time.time()
-        #print 'StartTime ' + str(st)
-        ################
-        #finder.rawCapture.seek(0)
-        #image = finder.rawCapture.read()
-        ################
-        #print 'Read jpg ' + str(time.time() - st)
-        #st = time.time()
-        ###############
-        #image_arr = np.asarray(bytearray(image), dtype=np.uint8)
-        #image = cv.imdecode(image_arr, cv.IMREAD_COLOR)
-        ################
-        #print 'Decode jpg ' + str(time.time() - st)
-        #st = time.time()
-        ###############
-        image = frame.array
-        generalview = image.copy()
-        #print 'Read jpg ' + str(time.time() - st)
-        #st = time.time()
-        finder.rawCapture.seek(0)
+    print finder
 
-        fpsc = finder.calcFps()
-        #print fpsc
-        cv.putText(generalview, "fps=%u" % fpsc, (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        data.setFrame(generalview)
+    while True:
 
-        #divadeImg = drawDiviadeLines(image.copy())
-        #data.setDivadeImg(divadeImg)
+        finder.initCamera()
 
-        if configCount == 100:
-            configCount = 0
-            if getLastModifieTime(confPath) == lastChangeTime:
-                pass
-            else:
-                lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
-        configCount += 1
+        for frame in finder.getSnapShot():
 
-        movFlag = False
+            image = frame.array
+            generalview = image.copy()
 
-################################################################
-        ################
-        #print 'Stuff jpg ' + str(time.time() - st)
-        #st = time.time()
-        ###############
-        g = gDivadeImg(image.copy(), activeRoi)
-        for i in activeRoi:
-            littleImg = next(g)
-            gray = cv.cvtColor(littleImg.copy(), cv.COLOR_BGR2GRAY)
-            gray = cv.GaussianBlur(gray, (21, 21), 0)
+            finder.rawCapture.seek(0)
 
-            if littleImgPrv[i] is None:
-                littleImgPrv[i] = gray.copy()
-                continue
+            fpsc = finder.calcFps()
+            cv.putText(generalview, "fps=%u" % fpsc, (10, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            data.setFrame(generalview, 0)
 
-            frameDelta = cv.absdiff(littleImgPrv[i], gray)
-            thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
-            thresh = cv.erode(thresh, None, iterations=2)
-
-            (img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
-            for c in cnts:
-                # if the contour is too small, ignore it
-                if cv.contourArea(c) < 300:
-                    continue
-                # compute the bounding box for the contour, draw it on the frame,
-                # and update the text
-                movFlag = True
-                #(x, y, w, h) = cv.boundingRect(c)
-                #cv.rectangle(littleImg, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                if roiForDrive[i] is True:
-                    if firstROI != 1:
-                        finder.direction = 'drive'
-                        firstROI = 0
-                        continue
-                    firstROI = 1
-                elif roiForLeave[i] is True:
-                    if firstROI != 2:
-                        finder.direction = 'leave'
-                        firstROI = 0
-                        continue
-                    firstROI = 2
+            if configCount == 100:
+                configCount = 0
+                if getLastModifieTime(confPath) == lastChangeTime:
+                    pass
                 else:
-                    finder.direction = 'none '
-                    #firstROI = 0
+                    lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
+            configCount += 1
+
+            movFlag = False
+
+            g = gDivadeImg(image.copy(), activeRoi)
+            for i in activeRoi:
+                littleImg = next(g)
+                gray = cv.cvtColor(littleImg.copy(), cv.COLOR_BGR2GRAY)
+                gray = cv.GaussianBlur(gray, (21, 21), 0)
+
+                if littleImgPrv[i] is None:
+                    littleImgPrv[i] = gray.copy()
+                    continue
+
+                frameDelta = cv.absdiff(littleImgPrv[i], gray)
+                thresh = cv.threshold(frameDelta, 25, 255, cv.THRESH_BINARY)[1]
+                thresh = cv.erode(thresh, None, iterations=2)
+
+                (img, cnts, _) = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+                for c in cnts:
+                    # if the contour is too small, ignore it
+                    if cv.contourArea(c) < 300:
+                        continue
+                    # compute the bounding box for the contour, draw it on the frame,
+                    # and update the text
+                    movFlag = True
+                    #(x, y, w, h) = cv.boundingRect(c)
+                    #cv.rectangle(littleImg, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    if roiForDrive[i] is True:
+                        if firstROI != 1:
+                            finder.direction = 'drive'
+                            firstROI = 0
+                            continue
+                        firstROI = 1
+                    elif roiForLeave[i] is True:
+                        if firstROI != 2:
+                            finder.direction = 'leave'
+                            firstROI = 0
+                            continue
+                        firstROI = 2
+                    else:
+                        finder.direction = 'none '
+                        #firstROI = 0
+                    break
+
+                littleImgPrv[i] = gray
+
+            if movFlag is True:
+                finder.rawCapture.truncate(0)
+                finder.camera.close()
+                get5secVide0(data)
                 break
-
-            #if snapCount[i] == 1:
-            littleImgPrv[i] = gray
-            #    snapCount[i] = 0
-            #snapCount[i] += 1
-
-###############################################################################
-        ################
-        #print 'Drive jpg ' + str(time.time() - st)
-        #st = time.time()
-        ###############
-        if movFlag is True:
-            #row, cols, depth = image.shape
-            #tmp = image[cols / 5:4 * cols / 5, row / 5:4 * row / 5]
-            plateFinder(data, finder, image)
-            ################
-            #print 'Plate jpg ' + str(time.time() - st)
-            #st = time.time()
-            ###############
-        finder.rawCapture.truncate(0)
-        #################
-        #print 'Trunc jpg ' + str(time.time() - st)
-        #st = time.time()
-        #print 'End time ' + str(st)
-        ################
-        #time.sleep(0.1)
+            else:
+                finder.rawCapture.truncate(0)
 
 
 class MyManager(BaseManager):
@@ -622,7 +680,6 @@ def main(data):
 
 MyManager.register('ImgData', ImgData)
 
-
 if __name__ == '__main__':
 
     StartLog()
@@ -631,7 +688,10 @@ if __name__ == '__main__':
     data = manager.ImgData()
 
     procServer = mp.Process(target=server, args=(data,))
+    procPlate = mp.Process(target=plate, args=(data,))
+
     procServer.start()
+    procPlate.start()
 
     main(data)
 
