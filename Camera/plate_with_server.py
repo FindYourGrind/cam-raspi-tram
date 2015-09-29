@@ -516,7 +516,8 @@ def plateFinder(data, finder, image):
         print "Plate Number Detected"
 
         rows, cols = cutNumberImg.shape[:2]
-        M = cv.getRotationMatrix2D((cols / 2, rows / 2), data.getAngle(), 1)
+        angl = float(data.getAngle())
+        M = cv.getRotationMatrix2D((cols / 2, rows / 2), angl, 1)
         cutNumberImg = cv.warpAffine(cutNumberImg, M, (cols, rows))
 
         data.setPlateImg(cutNumberImg)
