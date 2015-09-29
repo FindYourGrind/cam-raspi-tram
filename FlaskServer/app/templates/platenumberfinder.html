@@ -11,6 +11,24 @@
         lab.value = str.slice(0, str.length - 7);
         setTimeout(arguments.callee, 500);
     }, 500)
+
+    $(function() {
+        $( "#slider" ).slider({
+            min: -20,
+            max: 20,
+            step: 1,
+            value: {{angle}},
+            stop: function(event, ui){
+                angle = document.getElementById("angle");
+                angl = $( "#slider" ).slider("option", "value");
+                angle.value = '' + angl;
+
+                var x = new XMLHttpRequest();
+                x.open("POST", "angle", false);
+                x.send(angl);
+            }
+        });
+    });
 </script>
 
 <center><h1>Plate Number Finder</h1>
@@ -25,6 +43,16 @@
             <center>
                 <h2>Threash<h2>
             </center>
+        </td>
+    </tr>
+     <tr>
+        <td>
+            <center>
+                <div id="slider"></div>
+            </center>
+        </td>
+        <td>
+            <input id="angle" size="3" value={{angle}}>
         </td>
     </tr>
     <tr>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, flash, redirect, Response
+from flask import render_template, flash, redirect, Response, request
 from app import app
 import forms
 import threading
@@ -8,7 +8,9 @@ import time
 import socket
 import os
 import subprocess
-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 class Camera(object):
     thread = None  # background thread that reads frames from camera
@@ -376,7 +378,12 @@ def DriveDirection():
 
 @app.route('/plate')
 def PlateNumberFinder():
-    return render_template('platenumberfinder.html')
+    path = '/var/www/angle.txt'
+    base, ext = os.path.splitext(path)
+    a = open("{}{}".format(base, ext), mode='r')
+    angl = a.read()
+    a.close()
+    return render_template('platenumberfinder.html', angle=angl)
 
 
 @app.route('/lastplate', methods=['GET'])
@@ -390,6 +397,18 @@ def lastplate():
         tmp = "No plate number finded"
     config.close()
     return tmp
+
+
+@app.route('/angle', methods=['POST'])
+def angle():
+
+    if request.method == 'POST':
+        path = '/var/www/angle.txt'
+        base, ext = os.path.splitext(path)
+        angle = open("{}{}".format(base, ext), mode='w')
+        angle.write(request.data)
+        angle.close()
+    return request.data
 
 
 @app.route('/update', methods=['GET'])
