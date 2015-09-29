@@ -297,6 +297,12 @@ class ImgData(object):
             cls.instance = super(ImgData, cls).__new__(cls)
         return cls.instance
 
+    def setAngle(self, angle):
+        self.angle = angle
+
+    def getAngle(self):
+        return self.angle
+
     def setCars(self, cars):
         self.cars.append(cars)
 
@@ -480,13 +486,13 @@ def configurateDetector(path, drive, leave, activeRoi, time):
     return time
 
 
-def updateAngle(finder, lastChangeAngleTime):
+def updateAngle(data, lastChangeAngleTime):
 
     path = '/var/www/angle.txt'
     base, ext = os.path.splitext(path)
     a = open("{}{}".format(base, ext), mode='r')
-    finder.angle = a.read()
-    print(finder.angle)
+    data.setAngle(a.read())
+    print(data.getAngle())
     a.close()
 
     lastChangeAngleTime = os.path.getmtime(path)
@@ -510,7 +516,7 @@ def plateFinder(data, finder, image):
         print "Plate Number Detected"
 
         rows, cols = cutNumberImg.shape[:2]
-        M = cv.getRotationMatrix2D((cols / 2, rows / 2), finder.angle, 1)
+        M = cv.getRotationMatrix2D((cols / 2, rows / 2), data.getAngle(), 1)
         cutNumberImg = cv.warpAffine(cutNumberImg, M, (cols, rows))
 
         data.setPlateImg(cutNumberImg)
@@ -666,7 +672,7 @@ def DirectionDetector(data):
             if getLastModifieTime(anglePath) == lastChangeAngleTime:
                 pass
             else:
-                lastChangeAngleTime = updateAngle(finder, lastChangeTime)
+                lastChangeAngleTime = updateAngle(data, lastChangeTime)
 
             configCount += 1
 
