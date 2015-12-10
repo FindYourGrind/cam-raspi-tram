@@ -643,6 +643,14 @@ def DirectionDetector(data):
     roiCount = [0 for i in range(0, 16)]
 
     #lastChangeTime = configurateDetector(confPath, roiForDrive, roiForLeave, activeRoi, lastChangeTime)
+    
+    try:
+	lastChangeAngleTime = updateAngle(data, lastChangeAngleTime)
+    except:    
+	file = open(anglePath, 'a')
+	file.write('0')
+	file.close()
+	lastChangeAngleTime = updateAngle(data, lastChangeAngleTime)
 
     print finder
 
@@ -673,7 +681,7 @@ def DirectionDetector(data):
             if getLastModifieTime(anglePath) == lastChangeAngleTime:
                 pass
             else:
-                lastChangeAngleTime = updateAngle(data, lastChangeTime)
+                lastChangeAngleTime = updateAngle(data, lastChangeAngleTime)
 
             configCount += 1
 
